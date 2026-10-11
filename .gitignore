@@ -15,6 +15,7 @@ backend/logs/
 *.log
 node_modules/
 .pnpm-store/
+.npm-cache/
 frontend/dist/
 frontend/.vite/
 .DS_Store

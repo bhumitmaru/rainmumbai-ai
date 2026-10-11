@@ -1,17 +1,19 @@
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-pydantic==2.10.4
-pydantic-settings==2.7.0
-email-validator==2.2.0
-SQLAlchemy==2.0.36
-alembic==1.14.0
-psycopg[binary]==3.2.3
-python-jose[cryptography]==3.3.0
-bcrypt==4.2.1
-httpx==0.28.1
-PyYAML==6.0.2
-APScheduler==3.10.4
-python-multipart==0.0.20
-python-dotenv==1.0.1
-pytest==8.3.4
-pytest-asyncio==0.25.0
+# Ranges (not exact pins) so the app installs cleanly across Python 3.11–3.14
+# (the latest versions ship prebuilt wheels for each supported interpreter).
+fastapi>=0.116.0,<1.0
+uvicorn[standard]>=0.34.0,<1.0
+pydantic>=2.12.0,<3.0
+pydantic-settings>=2.7.0,<3.0
+email-validator>=2.2.0,<3.0
+SQLAlchemy>=2.0.36,<3.0
+alembic>=1.14.0,<2.0
+psycopg[binary]>=3.2.3,<4.0
+python-jose[cryptography]>=3.3.0,<4.0
+bcrypt>=4.2.1,<6.0
+httpx>=0.28.1,<1.0
+PyYAML>=6.0.2,<7.0
+APScheduler>=3.10.4,<4.0
+python-multipart>=0.0.20,<1.0
+python-dotenv>=1.0.1,<2.0
+pytest>=8.3.4,<9.0
+pytest-asyncio>=0.25.0,<1.0

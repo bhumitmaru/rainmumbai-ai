@@ -107,8 +107,8 @@ Frontend:
 
 ```bash
 cd frontend
-pnpm install
-pnpm dev                      # http://localhost:5173 (proxies /api to :8000)
+npm install
+npm run dev                  # http://localhost:5173 (proxies /api to :8000)
 ```
 
 * Frontend: http://localhost:5173
@@ -199,7 +199,7 @@ the linear calibration and promotes it **only if it beats the active version**.
 cd backend && pytest
 
 # frontend
-cd frontend && pnpm test
+cd frontend && npm test
 ```
 
 ---
