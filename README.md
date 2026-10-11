@@ -23,7 +23,7 @@ frontend (React + Vite + Tailwind + Recharts)
 backend (FastAPI)
         ├── auth (JWT + bcrypt)
         ├── predictions / weather / performance / profitability / admin
-        ├── pipeline: ingest → predict → evaluate
+        ├── pipeline: ingest → predict → evaluate (+ historical backfill)
         └── APScheduler (hourly ingest+prediction, monthly evaluation)
         │
         ▼
@@ -58,6 +58,7 @@ Because IMD daily LPA normals are not bundled, `backend/app/db/seed.py` generate
 deterministic **climatological daily LPA curve** (Gaussian seasonal profile scaled so the
 monsoon season 1 Jun–30 Sep sums to 2206.7 mm) and labels it `source=climatology-seed`.
 Replace this seed (or the whole formula) to use official values — see `config/index.yaml`.
+This seed is a climatology proxy, not an official IMD normal feed.
 
 From a forecast the system produces:
 
@@ -158,10 +159,30 @@ All prediction/analytics endpoints require a `Authorization: Bearer <token>` hea
 | GET | `/api/admin/users` | users (admin) |
 | POST | `/api/admin/ingest` | trigger ingest+predict (admin) |
 | POST | `/api/admin/evaluate` | trigger evaluation (admin) |
+| POST | `/api/admin/backfill` | trigger historical backfill (admin) |
 | GET | `/api/health` | liveness |
 
 The current prediction is cached in the database (`is_current_cache`) and served without
 recomputation, keeping the response well under the 5-second target.
+
+### Historical backfill / backtest
+
+Backfill historical performance with real data only:
+
+```bash
+cd backend
+python -m app.pipeline.backfill --start 2025-06-01 --end 2026-10-10
+# optional: --seasons 2024,2025 --dry-run
+```
+
+What this does:
+
+- Uses Open-Meteo **archive** rainfall for Colaba/Santacruz to reconstruct observed outcomes using the same CDR logic (24h ending 08:30 IST, June 1 anchor reset).
+- Uses Open-Meteo **historical forecast** endpoint for backtest inputs (avoids look-ahead from observed archive rainfall).
+- Stores predictions with `source=backfill`, keeps live scheduler behavior unchanged, and runs evaluation so MAE/RMSE/direction metrics update.
+- Exposes persistence baseline (`No Change`, i.e., predicted deviation `0`) in `/api/performance`.
+
+Important caveat: backfilled rows are archived-forecast backtests, not live-issued predictions.
 
 ---
 

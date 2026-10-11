@@ -8,13 +8,14 @@ import type { Profitability } from '../types'
 export default function ProfitabilityPage() {
   const [data, setData] = useState<Profitability | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [source, setSource] = useState<'all' | 'live' | 'backfill'>('all')
 
   useEffect(() => {
     api
-      .get('/profitability')
+      .get('/profitability', { params: { source } })
       .then((r) => setData(r.data as Profitability))
       .catch((err) => setError(err?.response?.data?.detail ?? 'Failed to load profitability'))
-  }, [])
+  }, [source])
 
   if (!data) return error ? <div className="text-slate-600">{error}</div> : <Spinner />
 
@@ -23,6 +24,17 @@ export default function ProfitabilityPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-slate-800">Profitability Analysis</h1>
+      <div className="flex items-center justify-end">
+        <select
+          className="rounded border border-slate-300 px-2 py-1 text-sm"
+          value={source}
+          onChange={(e) => setSource(e.target.value as 'all' | 'live' | 'backfill')}
+        >
+          <option value="all">All</option>
+          <option value="live">Live</option>
+          <option value="backfill">Backfill</option>
+        </select>
+      </div>
       <p className="text-sm text-slate-500">
         Decision rule: <span className="font-medium text-slate-700">{data.decision_rule}</span> · {data.lots} lot
         (s) · ₹{data.inr_per_mm} per mm. Hypothetical, based on historical predictions.
@@ -45,6 +57,7 @@ export default function ProfitabilityPage() {
               <th className="px-4 py-3">Actual</th>
               <th className="px-4 py-3">Realized Δ</th>
               <th className="px-4 py-3">P&L (₹)</th>
+              <th className="px-4 py-3">Source</th>
             </tr>
           </thead>
           <tbody>
@@ -63,11 +76,18 @@ export default function ProfitabilityPage() {
                 <td className={`px-4 py-3 font-medium ${t.pnl_inr >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   ₹{t.pnl_inr.toFixed(2)}
                 </td>
+                <td className="px-4 py-3">
+                  {t.source === 'backfill' ? (
+                    <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700">Backfilled</span>
+                  ) : (
+                    <span className="text-xs text-slate-500">Live</span>
+                  )}
+                </td>
               </tr>
             ))}
             {data.trades.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                   No matured trades yet. Profitability appears once predictions are compared with observed outcomes.
                 </td>
               </tr>

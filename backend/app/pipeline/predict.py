@@ -174,6 +174,7 @@ def run_predict(db: Session) -> Prediction:
             "member_deltas": member_deltas,
         },
         is_current_cache=True,
+        source="live",
     )
     db.add(prediction)
     db.commit()

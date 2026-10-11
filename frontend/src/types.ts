@@ -62,6 +62,7 @@ export interface HistoryItem {
   actual_direction: string | null
   confidence_overall: number
   model_version: string
+  source: 'live' | 'backfill'
 }
 
 export interface PredictionHistory {
@@ -120,6 +121,7 @@ export interface EvaluationSnapshot {
 }
 
 export interface PerformanceSample {
+  prediction_id: number
   target_timestamp: string
   predicted_index: number
   actual_index: number
@@ -128,6 +130,18 @@ export interface PerformanceSample {
   direction: string
   actual_direction: string
   direction_correct: boolean
+  source: 'live' | 'backfill'
+}
+
+export interface PerformanceSeriesPoint {
+  target_timestamp: string
+  value: number
+}
+
+export interface BaselineMetrics {
+  label: string
+  mae: number | null
+  direction_accuracy: number | null
 }
 
 export interface Performance {
@@ -136,9 +150,17 @@ export interface Performance {
   direction_accuracy: number | null
   direction_f1: number | null
   sample_count: number
+  sample_total: number
   last_evaluated_at: string | null
   model_version: string | null
   disclaimer: string
+  baseline: BaselineMetrics
+  evaluated_from: string | null
+  evaluated_to: string | null
+  error_series: PerformanceSeriesPoint[]
+  cumulative_accuracy_series: PerformanceSeriesPoint[]
+  limit: number
+  offset: number
   evaluation_runs: EvaluationSnapshot[]
   samples: PerformanceSample[]
 }
@@ -150,6 +172,7 @@ export interface Trade {
   actual_index: number
   realized_delta: number
   pnl_inr: number
+  source: 'live' | 'backfill'
 }
 
 export interface Profitability {

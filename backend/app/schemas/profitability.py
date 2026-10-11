@@ -10,6 +10,7 @@ class TradeOut(BaseModel):
     actual_index: float
     realized_delta: float
     pnl_inr: float
+    source: str
 
 
 class ProfitabilityOut(BaseModel):

@@ -5,7 +5,7 @@ reconstructed from daily IMD rainfall and daily LPA. These helpers are the singl
 source of truth for reading that state so ingest, predict, and evaluate agree.
 """
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -56,12 +56,19 @@ def reconstruct_observed_spot(db: Session, up_to: date) -> dict[date, float]:
     return reconstruct_spot_series(rain, lpa, start, up_to)
 
 
-def load_outcome_pairs(db: Session) -> list[Prediction]:
+def load_outcome_pairs(
+    db: Session,
+    *,
+    source: str = "all",
+    from_timestamp: datetime | None = None,
+    to_timestamp: datetime | None = None,
+) -> list[Prediction]:
     """Predictions that have a matched observed outcome, oldest first."""
-    return list(
-        db.scalars(
-            select(Prediction)
-            .join(Outcome, Outcome.prediction_id == Prediction.id)
-            .order_by(Prediction.target_timestamp.asc())
-        ).all()
-    )
+    stmt = select(Prediction).join(Outcome, Outcome.prediction_id == Prediction.id)
+    if source in {"live", "backfill"}:
+        stmt = stmt.where(Prediction.source == source)
+    if from_timestamp is not None:
+        stmt = stmt.where(Prediction.target_timestamp >= from_timestamp)
+    if to_timestamp is not None:
+        stmt = stmt.where(Prediction.target_timestamp <= to_timestamp)
+    return list(db.scalars(stmt.order_by(Prediction.target_timestamp.asc())).all())

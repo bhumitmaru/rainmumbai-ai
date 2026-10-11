@@ -20,5 +20,8 @@ def test_performance_structure(client):
     body = resp.json()
     assert "mae" in body and "rmse" in body
     assert "sample_count" in body
+    assert "baseline" in body
+    assert "error_series" in body
+    assert "cumulative_accuracy_series" in body
     assert isinstance(body["evaluation_runs"], list)
     assert isinstance(body["samples"], list)

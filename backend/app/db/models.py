@@ -142,6 +142,7 @@ class Prediction(Base):
     model_version_id: Mapped[int] = mapped_column(ForeignKey("model_versions.id"), nullable=False)
     inputs_json: Mapped[dict | None] = mapped_column(JSON)
     is_current_cache: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    source: Mapped[str] = mapped_column(String(20), default="live", nullable=False, index=True)
 
     model_version: Mapped[ModelVersion] = relationship(back_populates="predictions")
     outcome: Mapped["Outcome | None"] = relationship(back_populates="prediction", uselist=False)

@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -7,8 +9,11 @@ from app.core.datetime_utils import utcnow
 from app.db.models import IngestionStatus, JobRun, Prediction, User
 from app.db.session import get_db
 from app.pipeline import evaluate, ingest, predict
+from app.pipeline.backfill import run_backfill
 from app.schemas.admin import (
     AdminOverviewOut,
+    BackfillRequest,
+    BackfillTriggerOut,
     IngestionStatusOut,
     JobRunOut,
     JobTriggerOut,
@@ -99,3 +104,39 @@ def trigger_evaluate(db: Session = Depends(get_db), admin: User = Depends(get_cu
         db.add(job)
         db.commit()
         return JobTriggerOut(message="failed", job_run_id=job.id)
+
+
+@router.post("/backfill", response_model=BackfillTriggerOut)
+def trigger_backfill(
+    payload: BackfillRequest,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+) -> BackfillTriggerOut:
+    try:
+        summary = run_backfill(
+            db,
+            start=date.fromisoformat(payload.start),
+            end=date.fromisoformat(payload.end),
+            seasons={int(x.strip()) for x in payload.seasons.split(",")} if payload.seasons else None,
+            dry_run=payload.dry_run,
+        )
+        job = JobRun(
+            job_name="manual_backfill",
+            status="success",
+            finished_at=utcnow(),
+            message=str(summary),
+        )
+        db.add(job)
+        db.commit()
+        return BackfillTriggerOut(message="success", job_run_id=job.id, summary=summary)
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        job = JobRun(
+            job_name="manual_backfill",
+            status="failed",
+            finished_at=utcnow(),
+            message=str(exc),
+        )
+        db.add(job)
+        db.commit()
+        return BackfillTriggerOut(message="failed", job_run_id=job.id, summary={"error": str(exc)})
