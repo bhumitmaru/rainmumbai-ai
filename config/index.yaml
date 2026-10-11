@@ -1,0 +1,57 @@
+# RainMumbai Index configuration (swappable).
+# Official NCDEX RAINMUMBAI CDR spot (see README). No off-season freeze:
+# the same daily recurrence runs every calendar day; each 1 June the
+# series resets to the season-LPA anchor, matching NCDEX.
+
+formula_id: ncdex_cdr_v1
+
+season_lpa_anchor_mm: 2206.7
+reset_month: 6
+reset_day: 1
+
+# IMD rainfall day: 24h ending 08:30 IST.
+imd_day_end_hour_ist: 8
+imd_day_end_minute_ist: 30
+timezone: Asia/Kolkata
+
+# Direction: |predicted - current| <= threshold => No Change
+no_change_threshold_mm: 1.0
+
+# Category vs season LPA anchor (mm).
+category:
+  low_below_anchor_mm: 50
+  high_above_anchor_mm: 50
+  labels:
+    low: Low
+    moderate: Moderate
+    high: High
+
+# Optional linear calibration: predicted' = slope * predicted + intercept
+calibration:
+  enabled: true
+  slope: 1.0
+  intercept: 0.0
+
+# Hypothetical 1-lot P&L using NCDEX multiplier (not financial advice).
+profit:
+  lots: 1
+  inr_per_mm: 50.0
+  decision: directional
+  # Increase => long, Decrease => short, No Change => flat
+
+confidence:
+  overall_weights:
+    data_quality: 0.34
+    model_performance: 0.33
+    stability: 0.33
+  rolling_performance_days: 30
+  physical_ranges:
+    rainfall_mm: [0, 600]
+    temperature_c: [5, 50]
+    humidity_pct: [0, 100]
+    pressure_hpa: [950, 1050]
+    wind_kmh: [0, 150]
+  freshness_hours_ok: 6
+  freshness_hours_stale: 24
+
+disclaimer: Predictions are probabilistic and based on historical data and current meteorological conditions. They do not guarantee future outcomes.
