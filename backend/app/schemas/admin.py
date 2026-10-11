@@ -47,3 +47,16 @@ class AdminOverviewOut(BaseModel):
 class JobTriggerOut(BaseModel):
     message: str
     job_run_id: int
+
+
+class BackfillRequest(BaseModel):
+    start: str
+    end: str
+    seasons: str | None = None
+    dry_run: bool = False
+
+
+class BackfillTriggerOut(BaseModel):
+    message: str
+    job_run_id: int
+    summary: dict

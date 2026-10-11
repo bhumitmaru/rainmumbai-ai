@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -27,5 +30,15 @@ def history(
     user: User = Depends(get_current_user),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    from_timestamp: datetime | None = Query(None, alias="from"),
+    to_timestamp: datetime | None = Query(None, alias="to"),
+    source: Literal["live", "backfill", "all"] = Query("all"),
 ) -> PredictionHistoryOut:
-    return list_predictions(db, limit=limit, offset=offset)
+    return list_predictions(
+        db,
+        limit=limit,
+        offset=offset,
+        from_timestamp=from_timestamp,
+        to_timestamp=to_timestamp,
+        source=source,
+    )

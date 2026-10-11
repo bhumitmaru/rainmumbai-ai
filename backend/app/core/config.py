@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     open_meteo_forecast_url: str = "https://api.open-meteo.com/v1/forecast"
     open_meteo_ensemble_url: str = "https://ensemble-api.open-meteo.com/v1/ensemble"
     open_meteo_archive_url: str = "https://archive-api.open-meteo.com/v1/archive"
+    open_meteo_historical_forecast_url: str = "https://historical-forecast-api.open-meteo.com/v1/forecast"
     open_meteo_timeout_seconds: int = 20
 
     index_config_path: str = "config/index.yaml"

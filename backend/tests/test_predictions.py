@@ -22,3 +22,4 @@ def test_history_returns_items(client):
     body = resp.json()
     assert "items" in body
     assert body["total"] >= 1
+    assert "source" in body["items"][0]

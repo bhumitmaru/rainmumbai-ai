@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.datetime_utils import from_utc_naive
+from app.core.datetime_utils import from_utc_naive, to_utc_naive
 from app.db.models import Prediction
 from app.schemas.prediction import (
     ConfidenceBreakdown,
@@ -75,14 +77,36 @@ def _history_item(pred: Prediction) -> HistoryItem:
         actual_direction=outcome.actual_direction if outcome is not None else None,
         confidence_overall=pred.confidence_overall,
         model_version=_version(pred),
+        source=pred.source,
     )
 
 
-def list_predictions(db: Session, limit: int = 50, offset: int = 0) -> PredictionHistoryOut:
-    total = db.scalar(select(func.count()).select_from(Prediction)) or 0
-    rows = db.scalars(
-        select(Prediction).order_by(Prediction.id.desc()).offset(offset).limit(limit)
-    ).all()
+def list_predictions(
+    db: Session,
+    *,
+    limit: int = 50,
+    offset: int = 0,
+    from_timestamp: datetime | None = None,
+    to_timestamp: datetime | None = None,
+    source: str = "all",
+) -> PredictionHistoryOut:
+    where = []
+    if source in {"live", "backfill"}:
+        where.append(Prediction.source == source)
+    if from_timestamp is not None:
+        where.append(Prediction.target_timestamp >= to_utc_naive(from_timestamp))
+    if to_timestamp is not None:
+        where.append(Prediction.target_timestamp <= to_utc_naive(to_timestamp))
+
+    total_stmt = select(func.count()).select_from(Prediction)
+    if where:
+        total_stmt = total_stmt.where(*where)
+    total = db.scalar(total_stmt) or 0
+
+    stmt = select(Prediction).order_by(Prediction.id.desc()).offset(offset).limit(limit)
+    if where:
+        stmt = stmt.where(*where)
+    rows = db.scalars(stmt).all()
     return PredictionHistoryOut(
         items=[_history_item(p) for p in rows],
         total=total,

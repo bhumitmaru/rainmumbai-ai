@@ -44,6 +44,7 @@ class HistoryItem(BaseModel):
     actual_direction: str | None
     confidence_overall: float
     model_version: str
+    source: str
 
 
 class PredictionHistoryOut(BaseModel):

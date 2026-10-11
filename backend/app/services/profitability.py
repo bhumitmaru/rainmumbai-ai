@@ -8,17 +8,25 @@ Past performance is explicitly not a guarantee of future results.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings, load_index_config
-from app.core.datetime_utils import from_utc_naive
+from app.core.datetime_utils import from_utc_naive, to_utc_naive
 from app.pipeline.state import load_outcome_pairs
 from app.schemas.profitability import ProfitabilityOut, TradeOut
 
 _POSITION = {"Increase": 1, "Decrease": -1, "No Change": 0}
 
 
-def get_profitability(db: Session) -> ProfitabilityOut:
+def get_profitability(
+    db: Session,
+    *,
+    source: str = "all",
+    from_timestamp: datetime | None = None,
+    to_timestamp: datetime | None = None,
+) -> ProfitabilityOut:
     settings = get_settings()
     cfg = load_index_config()
     profit_cfg = cfg.get("profit", {}) or {}
@@ -26,7 +34,12 @@ def get_profitability(db: Session) -> ProfitabilityOut:
     inr_per_mm = float(profit_cfg.get("inr_per_mm", 50.0))
     decision = str(profit_cfg.get("decision", "directional"))
 
-    pairs = load_outcome_pairs(db)
+    pairs = load_outcome_pairs(
+        db,
+        source=source,
+        from_timestamp=to_utc_naive(from_timestamp) if from_timestamp is not None else None,
+        to_timestamp=to_utc_naive(to_timestamp) if to_timestamp is not None else None,
+    )
     trades: list[TradeOut] = []
     total = 0.0
     wins = 0
@@ -45,6 +58,7 @@ def get_profitability(db: Session) -> ProfitabilityOut:
                 actual_index=pred.outcome.actual_index,
                 realized_delta=realized,
                 pnl_inr=pnl,
+                source=pred.source,
             )
         )
 
