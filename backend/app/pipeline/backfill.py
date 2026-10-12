@@ -7,7 +7,6 @@ import json
 import logging
 import time
 from collections import Counter, defaultdict
-from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import Any
 
@@ -29,6 +28,7 @@ from app.pipeline.state import load_daily_lpa, reconstruct_observed_spot
 from app.providers.base import HourlyPoint, StationSeries
 from app.providers.open_meteo import OpenMeteoProvider
 from app.services.calibration import active_calibration
+from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,8 @@ class BackfillSummary:
     backfilled: int = 0
     skipped: int = 0
     dry_run_updates: int = 0
-    skip_reasons: Counter[str] = Counter()
+    #skip_reasons: Counter[str] = Counter()
+    skip_reasons: Counter[str] = field(default_factory=Counter)
     skipped_dates: dict[str, list[str]] | None = None
 
     def __post_init__(self) -> None:
